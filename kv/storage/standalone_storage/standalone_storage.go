@@ -45,7 +45,7 @@ func (s *StandAloneStorage) Stop() error {
 
 func (s *StandAloneStorage) Reader(ctx *kvrpcpb.Context) (storage.StorageReader, error) {
 	// Your Code Here (1).
-	return NewStandAloneReader(s.engine.Kv.NewTransaction(false)), nil
+	return NewStandAloneStorageReader(s.engine.Kv.NewTransaction(false)), nil
 }
 
 func (s *StandAloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) error {
@@ -69,17 +69,17 @@ func (s *StandAloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) 
 	return nil
 }
 
-type StandAloneReader struct {
+type StandAloneStorageReader struct {
 	kvTxn *badger.Txn
 }
 
-func NewStandAloneReader(kvTxn *badger.Txn) *StandAloneReader {
-	return &StandAloneReader{
+func NewStandAloneStorageReader(kvTxn *badger.Txn) *StandAloneStorageReader {
+	return &StandAloneStorageReader{
 		kvTxn: kvTxn,
 	}
 }
 
-func (s *StandAloneReader) GetCF(cf string, key []byte) ([]byte, error) {
+func (s *StandAloneStorageReader) GetCF(cf string, key []byte) ([]byte, error) {
 	value, err := engine_util.GetCFFromTxn(s.kvTxn, cf, key)
 	if err == badger.ErrKeyNotFound {
 		return nil, nil
@@ -87,10 +87,10 @@ func (s *StandAloneReader) GetCF(cf string, key []byte) ([]byte, error) {
 	return value, err
 }
 
-func (s *StandAloneReader) IterCF(cf string) engine_util.DBIterator {
+func (s *StandAloneStorageReader) IterCF(cf string) engine_util.DBIterator {
 	return engine_util.NewCFIterator(cf, s.kvTxn)
 }
 
-func (s *StandAloneReader) Close() {
+func (s *StandAloneStorageReader) Close() {
 	s.kvTxn.Discard()
 }
